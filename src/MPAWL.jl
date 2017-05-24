@@ -2,18 +2,24 @@ module MPAWL
 
 using ArgCheck
 using IntegerSmithNormalForm
+using Base.fft
 
 export modM!,
 modM,
-PatternMatrix,
-getm,
-patternSize,
-patternDimension,
-patternBasis,
-generatingSetBasis
+Lattice,
+frequencyLatticeBasisDecomp,
+getSamplingPoint,
+getFrequencyPoint,
+getSamplingIterator,
+getFrequencyIterator,
+FFT!,
+FFT,
+IFFT!,
+IFFT,
+setZerothFourierCoefficient!
 
-
-include("Pattern.jl")
+include("Lattice.jl")
+include("LatticeFunctions.jl")
 
 
 end # module
