@@ -11,7 +11,7 @@ immutable Lattice{I <: Integer}
   target :: String
   d :: I
   m :: I
-  size :: Array{I,1}
+  size :: Tuple
   dimension :: I
   samplingLatticeBasis :: Array{Float64,2}
   frequencyLatticeBasis :: Array{I,2}
@@ -96,7 +96,7 @@ end
 """
 function patternSize{I <: Integer}(M :: Array{I,2})
   d = diag(SNFWithoutTransform(M))
-  s = d[d .> 1]
+  s = tuple(d[d .> 1]...)
 end
 
 """

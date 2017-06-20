@@ -100,7 +100,10 @@ function getSamplingPoint(
                           coord :: CartesianIndex
                          )
   @argcheck length(coord.I) == M.dimension
-  modM((collect(coord.I)-1)*M.samplingLatticeBasis,eye(M.dimension),M.target)
+  2.0*pi*modM(M.samplingLatticeBasis*(collect(coord.I)-1),
+              eye(Int64,M.d),
+              M.target
+             )
 end
 
 function getFrequencyPoint(
@@ -108,7 +111,16 @@ function getFrequencyPoint(
                           coord :: CartesianIndex
                          )
   @argcheck length(coord.I) == M.dimension
-  2.0*pi*modM((collect(coord.I)-1)*M.frequencyLatticeBasis,M.M',M.target)
+  modM(M.frequencyLatticeBasis*(collect(coord.I)-1),M.M',M.target)
+end
+
+function getUnitCell(M :: Lattice)
+  [
+   (0.5*M.M\[-1,-1])';
+   (0.5*M.M\[-1, 1])';
+   (0.5*M.M\[ 1, 1])';
+   (0.5*M.M\[ 1,-1])'
+  ]
 end
 
 function FFT!{R <: AbstractFloat, C <: Complex}(
@@ -117,7 +129,7 @@ function FFT!{R <: AbstractFloat, C <: Complex}(
               M :: Lattice
              )
   @argcheck size(samplingData) == size(frequencyData)
-  @argcheck collect(size(samplingData)[1:M.dimension]) == M.size
+  @argcheck size(samplingData)[1:M.dimension] == M.size
 
   frequencyData = fft(samplingData,1:M.dimension)
   frequencyData
@@ -134,9 +146,9 @@ function IFFT!{R <: AbstractFloat, C <: Complex}(
               M :: Lattice
              )
   @argcheck size(samplingData) == size(frequencyData)
-  @argcheck collect(size(samplingData)[1:M.dimension]) == M.size
+  @argcheck size(samplingData)[1:M.dimension] == M.size
 
-  samplingData = ifft(frequencyData,1:M.dimension)
+  samplingData = real(ifft(frequencyData,1:M.dimension))
   samplingData
 end
 
@@ -150,7 +162,7 @@ function setZerothFourierCoefficient!{C <: Complex}(
                                                    M :: Lattice,
                                                    data :: Array{C}
                                                   )
-  @argcheck collect(size(frequencyData)[1:M.dimension]) == M.size
+  @argcheck size(frequencyData)[1:M.dimension] == M.size
   @argcheck size(frequencyData)[(M.dimension+1):end] == size(data)
   frequencyData[ones(Int,M.dimension)...,:] = data
   frequencyData

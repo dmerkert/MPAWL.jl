@@ -16,7 +16,8 @@ FFT!,
 FFT,
 IFFT!,
 IFFT,
-setZerothFourierCoefficient!
+setZerothFourierCoefficient!,
+getUnitCell
 
 include("Lattice.jl")
 include("LatticeFunctions.jl")

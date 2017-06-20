@@ -29,10 +29,10 @@ using IntegerSmithNormalForm
   @test MRu.d == 2
   @test MRs.d == 2
 
-  @test MDu.size == [64,64]
-  @test MDs.size == [64,64]
-  @test MRu.size == [64^2]
-  @test MRs.size == [64^2]
+  @test MDu.size == (64,64)
+  @test MDs.size == (64,64)
+  @test MRu.size == (64^2,)
+  @test MRs.size == (64^2,)
 
   @test MDu.dimension == 2
   @test MDs.dimension == 2
