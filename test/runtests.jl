@@ -106,4 +106,19 @@ end
   setZerothFourierCoefficient!(AFrequency,MRs,[3.1;4.1])
   A = IFFT(AFrequency,MRs)
   @test sum(A,(1))[:] ≈ [3.1;4.1]
+
+  for i in getSamplingIterator(MDu)
+    @test all(0 .<= getSamplingPoint(MDu,i) .< 2.0pi)
+    @test round(getFrequencyPoint(MDu,i)) == getFrequencyPoint(MDu,i)
+    @test all(-pi .<= getSamplingPoint(MDs,i) .< pi)
+    @test round(getFrequencyPoint(MDs,i)) == getFrequencyPoint(MDs,i)
+  end
+
+  for i in getSamplingIterator(MRu)
+    i = CartesianIndex((1))
+    @test all(0 .<= getSamplingPoint(MRu,i) .< 2.0pi)
+    @test round(getFrequencyPoint(MRu,i)) == getFrequencyPoint(MRu,i)
+    @test all(-pi .<= getSamplingPoint(MRs,i) .< pi)
+    @test round(getFrequencyPoint(MRs,i)) == getFrequencyPoint(MRs,i)
+  end
 end
