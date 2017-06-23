@@ -59,9 +59,9 @@ using IntegerSmithNormalForm
   [1/64 0.0;0.0 1/64]
   @test MDs.samplingLatticeBasis.'*MDs.frequencyLatticeBasis ≈
   [1/64 0.0;0.0 1/64]
-  @test mod(MRu.samplingLatticeBasis.'*MRu.frequencyLatticeBasis,1.0) ≈
+  @test mod.(MRu.samplingLatticeBasis.'*MRu.frequencyLatticeBasis,1.0) ≈
   [1.0/64^2]
-  @test mod(MRs.samplingLatticeBasis.'*MRs.frequencyLatticeBasis,1.0) ≈
+  @test mod.(MRs.samplingLatticeBasis.'*MRs.frequencyLatticeBasis,1.0) ≈
   [1.0/64^2]
 end
 
@@ -109,16 +109,16 @@ end
 
   for i in getSamplingIterator(MDu)
     @test all(0 .<= getSamplingPoint(MDu,i) .< 2.0pi)
-    @test round(getFrequencyPoint(MDu,i)) == getFrequencyPoint(MDu,i)
+    @test round.(getFrequencyPoint(MDu,i)) == getFrequencyPoint(MDu,i)
     @test all(-pi .<= getSamplingPoint(MDs,i) .< pi)
-    @test round(getFrequencyPoint(MDs,i)) == getFrequencyPoint(MDs,i)
+    @test round.(getFrequencyPoint(MDs,i)) == getFrequencyPoint(MDs,i)
   end
 
   for i in getSamplingIterator(MRu)
     i = CartesianIndex((1))
     @test all(0 .<= getSamplingPoint(MRu,i) .< 2.0pi)
-    @test round(getFrequencyPoint(MRu,i)) == getFrequencyPoint(MRu,i)
+    @test round.(getFrequencyPoint(MRu,i)) == getFrequencyPoint(MRu,i)
     @test all(-pi .<= getSamplingPoint(MRs,i) .< pi)
-    @test round(getFrequencyPoint(MRs,i)) == getFrequencyPoint(MRs,i)
+    @test round.(getFrequencyPoint(MRs,i)) == getFrequencyPoint(MRs,i)
   end
 end

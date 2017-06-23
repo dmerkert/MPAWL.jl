@@ -17,7 +17,7 @@ immutable Lattice{I <: Integer}
   frequencyLatticeBasis :: Array{I,2}
   patternNormalForm :: Array{I,2}
 
-  function Lattice{I}(M :: Array{I,2}; target="symmetric")
+  function Lattice{I}(M :: Array{I,2}; target="symmetric") where I <: Integer
     @argcheck size(M,1) == size(M,2)
     @argcheck det(M) != 0
     @argcheck target == "unit" || target == "symmetric"
@@ -160,7 +160,7 @@ function generatingSetBasis{I <: Integer}(M :: Array{I,2},target)
   for i = 1:dM
     V[:,i] = modM(V[:,i],M,target)
   end
-  round(Int,V)
+  round.(Int,V)
 end
 
 

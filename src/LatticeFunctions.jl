@@ -14,9 +14,9 @@ function modM!{R <: AbstractFloat, I <: Integer}(
   @argcheck target == "unit" || target == "symmetric"
 
   if target == "unit"
-    k = M * mod(M\k,1);
+    k = M * mod.(M\k,1);
   else
-    k = M * (mod(M\k+0.5,1)-0.5);
+    k = M * (mod.(M\k+0.5,1)-0.5);
   end
   k
 end
@@ -25,7 +25,7 @@ modM!{I <: Integer}(
                k :: Array{I,1},
                M,
                target
-              ) = round(I,modM!(convert(Array{Float64,1},k),M,target))
+              ) = round.(I,modM!(convert(Array{Float64,1},k),M,target))
 
 """
     h = _modM(k,M; target="unit")
