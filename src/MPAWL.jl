@@ -12,15 +12,11 @@ getSamplingPoint,
 getFrequencyPoint,
 getSamplingIterator,
 getFrequencyIterator,
-FFT!,
-FFT,
-IFFT!,
-IFFT,
-setZerothFourierCoefficient!,
 getUnitCell
 
 include("Lattice.jl")
 include("LatticeFunctions.jl")
+include("FFT.jl")
 
 
 end # module
