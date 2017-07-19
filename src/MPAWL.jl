@@ -12,11 +12,16 @@ getSamplingPoint,
 getFrequencyPoint,
 getSamplingIterator,
 getFrequencyIterator,
-getUnitCell
+getUnitCell,
+getMaxIndex
 
 include("Lattice.jl")
 include("LatticeFunctions.jl")
 include("FFT.jl")
+include("frequencySampling.jl")
+include("TISpaces.jl")
+include("dlVP.jl")
+
 
 
 end # module

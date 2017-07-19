@@ -1,3 +1,4 @@
+export maxInd
 """
     Lattice
 
@@ -16,6 +17,9 @@ immutable Lattice{I <: Integer}
   samplingLatticeBasis :: Array{Float64,2}
   frequencyLatticeBasis :: Array{I,2}
   patternNormalForm :: Array{I,2}
+  snfU :: Array{I,2}
+  snfS :: Array{I,2}
+  snfV :: Array{I,2}
 
   function Lattice{I}(M :: Array{I,2}; target="symmetric") where I <: Integer
     @argcheck size(M,1) == size(M,2)
@@ -34,7 +38,9 @@ immutable Lattice{I <: Integer}
     @assert m > 0
     @assert _patternDimension <= d
 
-    S = diag(SNFWithoutTransform(M))
+    (snfU,snfS,snfV) = SNF(M)
+
+    S = diag(snfS)
     #@show M
     for i in 1:size(_patternBasis,2)
       for j in 1:size(_patternBasis,2)
@@ -44,7 +50,7 @@ immutable Lattice{I <: Integer}
         #@show 1.0/S[d-_patternDimension+i]
 
         i == j && @assert mod(dot(y,h),1.0) ≈ 1.0/S[d-_patternDimension+i]
-        i != j && @assert mod(dot(y,h),1.0) ≈ 0.0
+        i != j && @assert ((mod(dot(y,h),1.0) ≈ 0.0) || (mod(dot(y,h),1.0) ≈ 1.0))
       end
     end
 
@@ -57,7 +63,10 @@ immutable Lattice{I <: Integer}
         _patternDimension,
         _patternBasis,
         _generatingSetBasis,
-        _patternNormalForm
+        _patternNormalForm,
+        snfU,
+        snfS,
+        snfV
        )
   end
 end

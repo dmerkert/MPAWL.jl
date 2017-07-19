@@ -79,6 +79,7 @@ function IFFT(frequencyData, M, t)
   IFFT!(samplingData,frequencyData,M, t)
 end
 
+#TODO: k-ter Koeffizient setzen (0 default)
 function setZerothFourierCoefficient!{C <: Complex}(
                                                    frequencyData :: Array{C},
                                                    M :: Lattice,

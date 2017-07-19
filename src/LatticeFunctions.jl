@@ -65,24 +65,23 @@ end
 """
     frequencyLatticeBasisDecomp(k,M; target="unit")
 Decompose the vector k with respect to the frequency lattice basis of pattern matrix
-M, i.e. k = modM(V.v,M), where V = frequencyLatticeBasisDecomp(M)
+M, i.e. k = modM(V.v,M), where V = frequencyLatticeBasis(M)
 
 The `target` specifies the set of congruence class representants, i.e. either
 "unit" for [0,1)^d or "symmetric" for [-0.5,0.5)^d.
 """
 function frequencyLatticeBasisDecomp{I <: Integer}(
                                                 k :: Array{I,1},
-                                                M :: Lattice
+                                                L :: Lattice
                                                )
-  @argcheck length(k) == M.d
+  @argcheck length(k) == L.d
 
-  d = M.d
-  dM = M.dimension
-  (U,S,V) = SNF(M.M)
+  d = L.d
+  dM = L.dimension
   # decomposing w.r.t. M^T we use the U and S of M, following the thesis
   # from above: aBV is V^-T and thats used as inverse -> transpose and
   # multiply
-  v = modM(V.'*k,S,M.target)
+  v = modM(L.snfV.'*k,L.snfS,L.target)
   v = v[(d-dM+1):d]
   v
 end
@@ -122,3 +121,42 @@ function getUnitCell(M :: Lattice)
    (0.5*M.M\[ 1,-1])'
   ]
 end
+
+"""
+    getMaxIndex(M)
+
+returns the maximal index (vector) an entry of the (symmetric)
+generating Set uses when looking at the generating set of `M`.
+
+ The `target` specifies the set of congruence class representants, i.e. either
+ "unit" for [0,1)^d or "symmetric" for [-0.5,0.5)^d.
+
+"""
+function getMaxIndex(L :: Lattice,
+                     cubeSize :: Array{Float64,1}
+                    )
+
+  @argcheck length(cubeSize) == L.d
+
+  shift = 0.5cubeSize
+  if L.target == "unit"
+    shift = cubeSize
+  end
+
+  maxInd = zeros(Int,L.d)
+  for coord in CartesianRange(
+                              CartesianIndex((zeros(Int,L.d)...)),
+                              CartesianIndex((ones(Int,L.d)...))
+                             )
+
+    maxInd = max.(maxInd,
+                  abs.(ceil.(Int,L.M'*(collect(coord.I) - shift)))+1
+                 )
+  end
+  maxInd
+end
+
+getMaxIndex(L :: Lattice;
+            cubeSize :: Float64 = 1.0
+           ) = getMaxIndex(L,cubeSize*ones(L.d))
+
