@@ -1,4 +1,6 @@
-export maxInd
+using IntegerSmithNormalForm
+
+export Lattice
 """
     Lattice
 
@@ -13,13 +15,11 @@ immutable Lattice{I <: Integer}
   d :: I
   m :: I
   size :: Tuple
-  dimension :: I
+  rank :: I
   samplingLatticeBasis :: Array{Float64,2}
   frequencyLatticeBasis :: Array{I,2}
   patternNormalForm :: Array{I,2}
-  snfU :: Array{I,2}
-  snfS :: Array{I,2}
-  snfV :: Array{I,2}
+  SNF :: Tuple{Array{I,2},Array{I,2},Array{I,2}}
 
   function Lattice{I}(M :: Array{I,2}; target="symmetric") where I <: Integer
     @argcheck size(M,1) == size(M,2)
@@ -28,28 +28,26 @@ immutable Lattice{I <: Integer}
 
     d = getd(M)
     m = getm(M)
-    _patternSize = patternSize(M)
-    _patternDimension = patternDimension(M)
-    _patternBasis = patternBasis(M,target)
-    _generatingSetBasis = generatingSetBasis(M.',target)
+    _SNF = SNF(M)
+    _patternSize = patternSize(M,_SNF)
+    _patternRank = patternRank(M,_SNF)
+    _patternBasis = patternBasis(M,target,_SNF)
+    _generatingSetBasis = generatingSetBasis(M.',target,_SNF)
     _patternNormalForm = patternNormalForm(M)
 
     @assert d > 0
     @assert m > 0
-    @assert _patternDimension <= d
+    @assert _patternRank <= d
 
-    (snfU,snfS,snfV) = SNF(M)
 
-    S = diag(snfS)
+    S = diag(_SNF[2])
     #@show M
     for i in 1:size(_patternBasis,2)
       for j in 1:size(_patternBasis,2)
         y = _patternBasis[:,i]
         h = _generatingSetBasis[:,j]
-        #@show dot(y,h)
-        #@show 1.0/S[d-_patternDimension+i]
 
-        i == j && @assert mod(dot(y,h),1.0) ≈ 1.0/S[d-_patternDimension+i]
+        i == j && @assert mod(dot(y,h),1.0) ≈ 1.0/S[d-_patternRank+i]
         i != j && @assert ((mod(dot(y,h),1.0) ≈ 0.0) || (mod(dot(y,h),1.0) ≈ 1.0))
       end
     end
@@ -60,13 +58,11 @@ immutable Lattice{I <: Integer}
         d,
         m,
         _patternSize,
-        _patternDimension,
+        _patternRank,
         _patternBasis,
         _generatingSetBasis,
         _patternNormalForm,
-        snfU,
-        snfS,
-        snfV
+        _SNF
        )
   end
 end
@@ -102,20 +98,24 @@ end
     s = patternSize(M)
  Returns the elementary divisors of M, that are greater than 1.
  This corresponds to the size of the lattice.
-"""
-function patternSize{I <: Integer}(M :: Array{I,2})
-  d = diag(SNFWithoutTransform(M))
-  s = tuple(d[d .> 1]...)
+ """
+ function patternSize{I <: Integer}(M :: Array{I,2},
+                                    SNF :: Tuple{Array{I,2},Array{I,2},Array{I,2}}
+                                   )
+   d = diag(SNF[2])
+   s = tuple(d[d .> 1]...)
 end
 
 """
-    dM = patternDimension(M)
+    dM = patternRank(M)
  Returns the number of elementary divisors of M, that are greater than 1.
  This corresponds to the number of basis vectors of the pattern and hence
  the dimension of the corresponding lattice.
 """
-function patternDimension{I <: Integer}(M :: Array{I,2})
-  sum(diag(SNFWithoutTransform(M)) .> 1)
+function patternRank{I <: Integer}(M :: Array{I,2},
+                                   SNF :: Tuple{Array{I,2},Array{I,2},Array{I,2}}
+                                  )
+  sum(diag(SNF[2]) .> 1)
 end
 
 """
@@ -129,18 +129,20 @@ end
  The `target` specifies the set of congruence class representants, i.e. either
  "unit" for [0,1)^d or "symmetric" for [-0.5,0.5)^d.
 """
- function patternBasis{I <: Integer}(M :: Array{I,2} ,target)
+ function patternBasis{I <: Integer}(M :: Array{I,2},
+                                     target,
+                                     SNF :: Tuple{Array{I,2},Array{I,2},Array{I,2}}
+   )
    @argcheck target == "unit" || target == "symmetric"
 
    d = getd(M)
-   dM = patternDimension(M)
-   (U,S,V) = SNF(M)
-   V = V*(diagm(1./diag(S)))
-   V = V[:,d-dM+1:d]
-   for i in 1:dM
-     V[:,i] = modM(V[:,i],eye(Int,d),target)
+   rank = patternRank(M,SNF)
+   _V = SNF[3]*(diagm(1./diag(SNF[2])))
+   _V = _V[:,d-rank+1:d]
+   for i in 1:rank
+     _V[:,i] = modM(_V[:,i],eye(I,d),target)
    end
-   V
+   _V
  end
 
 """
@@ -154,22 +156,22 @@ end
  The `target` specifies the set of congruence class representants, i.e. either
  "unit" for [0,1)^d or "symmetric" for [-0.5,0.5)^d.
 """
-function generatingSetBasis{I <: Integer}(M :: Array{I,2},target)
+function generatingSetBasis{I <: Integer}(M :: Array{I,2},
+                                          target,
+                                          _SNF :: Tuple{Array{I,2},Array{I,2},Array{I,2}}
+  )
   @argcheck target == "unit" || target == "symmetric"
 
   d = getd(M)
-  dM = patternDimension(M)
+  rank = patternRank(M,_SNF)
   (U,S,V) = SNF(transpose(M))
-  #(_U,S,_V) = SNF(M)
-  #V = _U.'
-  #U = _V.'
 
-  V = transpose(inv(V))
-  V = V[:,d-dM+1:d]
-  for i = 1:dM
-    V[:,i] = modM(V[:,i],M,target)
+  _V = transpose(inv(V))
+  _V = _V[:,d-rank+1:d]
+  for i = 1:rank
+    _V[:,i] = modM(_V[:,i],M,target)
   end
-  round.(Int,V)
+  round.(I,_V)
 end
 
 

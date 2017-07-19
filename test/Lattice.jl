@@ -33,10 +33,10 @@ using Base.Test
   @test MRu.size == (64^2,)
   @test MRs.size == (64^2,)
 
-  @test MDu.dimension == 2
-  @test MDs.dimension == 2
-  @test MRu.dimension == 1
-  @test MRs.dimension == 1
+  @test MDu.rank == 2
+  @test MDs.rank == 2
+  @test MRu.rank == 1
+  @test MRs.rank == 1
 
   @test MDu.samplingLatticeBasis ≈ [0.015625 0; 0 0.015625]
   @test MDs.samplingLatticeBasis ≈ [0.015625 0; 0 0.015625]

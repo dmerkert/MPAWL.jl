@@ -13,10 +13,15 @@ using Base.Test
 
   dataC = rand(Complex128,128)
   dataR = rand(Float64,128)
-  #Fourier -> Fourier
-  changeBasis!(dataC,L,bSq,FirstDimensionsFFT)
-  changeBasis!(dataR,L,bSq,FirstDimensionsFFT)
-  changeBasis!(dataR,dataC,L,bSq,FirstDimensionsFFT)
-  changeBasis!(dataC,dataR,L,bSq,FirstDimensionsFFT)
 
+  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Space")
+  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Fourier")
+  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Fourier",outputDomain="Space")
+  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Fourier",outputDomain="Fourier")
+
+  changeBasis!(dataR,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Space")
+  changeBasis!(dataC,dataR,L,bSq,[1],inputDomain="Space",outputDomain="Space")
+
+  changeBasis!(dataR,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Fourier")
+  changeBasis!(dataC,dataR,L,bSq,[1],inputDomain="Fourier",outputDomain="Space")
 end

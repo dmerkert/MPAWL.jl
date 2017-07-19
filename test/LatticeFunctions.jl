@@ -48,11 +48,11 @@ using Base.Test
   LUnit = Lattice([64 1;5 32],target="unit")
   LSym = Lattice([64 1;5 32],target="symmetric")
 
-  @test getMaxIndex(LUnit) == [70;34]
-  @test getMaxIndex(LSym) == [36;18]
-  @test getMaxIndex(LUnit) == [70;34]
-  @test getMaxIndex(LUnit,cubeSize=4.0) == [277;133]
-  @test getMaxIndex(LSym,cubeSize=4.0) == [139;67]
+  @test getMaxDualLatticeIndex(LUnit) == [70;34]
+  @test getMaxDualLatticeIndex(LSym) == [36;18]
+  @test getMaxDualLatticeIndex(LUnit) == [70;34]
+  @test getMaxDualLatticeIndex(LUnit,cubeSize=4.0) == [277;133]
+  @test getMaxDualLatticeIndex(LSym,cubeSize=4.0) == [139;67]
 
   @test getUnitCell(Lattice([64 0;0 64])) ≈ [-1/32 -1/32;
                                               -1/32 1/32;
@@ -64,8 +64,6 @@ using Base.Test
                                                1/64  1/32;
                                                1/64 -1/32]
 
-  @test getMaxIndex(LUnit) == [70;34]
-  @test getMaxIndex(LSym) == [36;18]
-  @test getMaxIndex(LUnit,[1.4;77.2]) == [476;2472]
-  @test getMaxIndex(LSym,[1.4;77.2]) == [238;1236]
+  @test getMaxDualLatticeIndex(LUnit,[1.4;77.2]) == [476;2472]
+  @test getMaxDualLatticeIndex(LSym,[1.4;77.2]) == [238;1236]
 end

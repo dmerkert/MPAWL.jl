@@ -103,7 +103,7 @@ function delaValleePoussinMean(L :: Lattice,
   @argcheck length(g) == L.d
 
   ind = max.(1.0+2.0g,ones(length(g)))
-  tmax = getMaxIndex(L,ind)+1
+  tmax = getMaxDualLatticeIndex(L,ind)+1
   ckphi = zeros(Complex128,((2tmax+1)...))
   N = size(ckphi)
   for coord in getFrequencyIterator(N)

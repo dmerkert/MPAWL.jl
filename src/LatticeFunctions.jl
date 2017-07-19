@@ -1,3 +1,13 @@
+export modM!,
+modM,
+frequencyLatticeBasisDecomp,
+getSamplingIterator,
+getFrequencyIterator,
+getSamplingPoint,
+getFrequencyPoint,
+getUnitCell,
+getMaxDualLatticeIndex
+
 """
     _modM!(k,M; target="unit")
 
@@ -14,9 +24,9 @@ function modM!{R <: AbstractFloat, I <: Integer}(
   @argcheck target == "unit" || target == "symmetric"
 
   if target == "unit"
-    k = M * mod.(M\k,1);
+    k = M * mod.(M\k,1.0);
   else
-    k = M * (mod.(M\k+0.5,1)-0.5);
+    k = M * (mod.(M\k+0.5,1.0)-0.5);
   end
   k
 end
@@ -77,64 +87,61 @@ function frequencyLatticeBasisDecomp{I <: Integer}(
   @argcheck length(k) == L.d
 
   d = L.d
-  dM = L.dimension
+  dM = L.rank
   # decomposing w.r.t. M^T we use the U and S of M, following the thesis
   # from above: aBV is V^-T and thats used as inverse -> transpose and
   # multiply
-  v = modM(L.snfV.'*k,L.snfS,L.target)
+  v = modM(L.SNF[3].'*k,L.SNF[2],L.target)
   v = v[(d-dM+1):d]
   v
 end
 
-function getSamplingIterator(M :: Lattice)
-  CartesianRange(M.size)
+function getSamplingIterator(L :: Lattice)
+  CartesianRange(L.size)
 end
 
-function getFrequencyIterator(M :: Lattice)
-  CartesianRange(M.size)
+function getFrequencyIterator(L :: Lattice)
+  CartesianRange(L.size)
 end
 
 function getSamplingPoint(
-                          M :: Lattice,
+                          L :: Lattice,
                           coord :: CartesianIndex
                          )
-  @argcheck length(coord.I) == M.dimension
-  2.0*pi*modM(M.samplingLatticeBasis*(collect(coord.I)-1),
-              eye(Int64,M.d),
-              M.target
+  @argcheck length(coord.I) == L.rank
+  2.0*pi*modM(L.samplingLatticeBasis*(collect(coord.I)-1),
+              eye(Int64,L.d),
+              L.target
              )
 end
 
 function getFrequencyPoint(
-                          M :: Lattice,
+                          L :: Lattice,
                           coord :: CartesianIndex
                          )
-  @argcheck length(coord.I) == M.dimension
-  modM(M.frequencyLatticeBasis*(collect(coord.I)-1),M.M',M.target)
+  @argcheck length(coord.I) == L.rank
+  modM(L.frequencyLatticeBasis*(collect(coord.I)-1),L.M',L.target)
 end
 
-function getUnitCell(M :: Lattice)
+function getUnitCell(L :: Lattice)
   [
-   (0.5*M.M\[-1,-1])';
-   (0.5*M.M\[-1, 1])';
-   (0.5*M.M\[ 1, 1])';
-   (0.5*M.M\[ 1,-1])'
+   (0.5*L.M\[-1,-1])';
+   (0.5*L.M\[-1, 1])';
+   (0.5*L.M\[ 1, 1])';
+   (0.5*L.M\[ 1,-1])'
   ]
 end
 
 """
-    getMaxIndex(M)
+    getMaxDualLatticeIndex(M)
 
 returns the maximal index (vector) an entry of the (symmetric)
 generating Set uses when looking at the generating set of `M`.
 
- The `target` specifies the set of congruence class representants, i.e. either
- "unit" for [0,1)^d or "symmetric" for [-0.5,0.5)^d.
-
 """
-function getMaxIndex(L :: Lattice,
-                     cubeSize :: Array{Float64,1}
-                    )
+function getMaxDualLatticeIndex(L :: Lattice,
+                                cubeSize :: Array{Float64,1}
+                               )
 
   @argcheck length(cubeSize) == L.d
 
@@ -156,7 +163,7 @@ function getMaxIndex(L :: Lattice,
   maxInd
 end
 
-getMaxIndex(L :: Lattice;
-            cubeSize :: Float64 = 1.0
-           ) = getMaxIndex(L,cubeSize*ones(L.d))
+getMaxDualLatticeIndex(L :: Lattice;
+                       cubeSize :: Float64 = 1.0
+                      ) = getMaxDualLatticeIndex(L,cubeSize*ones(L.d))
 

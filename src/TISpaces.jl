@@ -48,54 +48,35 @@ function coeffsSpace2Fourier!{R <: AbstractFloat,
   data
 end
 
-function changeBasis!{R <: AbstractFloat}(data :: Array{R},
-                                          L :: Lattice,
-                                          bracketSums :: Array{R},
-                                          t
-                                         )
-  @argcheck size(data) == L.size
-  @argcheck size(bracketSums) == L.size
-
-  hatData = FFT(data,L,t)
-  hatData .*= 1.0/L.m.*bracketSums
-  IFFT!(data,hatData,L,t)
-end
-
-function changeBasis!{R <: AbstractFloat, C <: Complex}(hatData :: Array{C},
-                                                        L :: Lattice,
-                                                        bracketSums :: Array{R},
-                                                        t
-                                                       )
-  @argcheck size(hatData) == L.size
-  @argcheck size(bracketSums) == L.size
-
-  hatData .*= 1.0/L.m.*bracketSums
-end
-
-function changeBasis!{R <: AbstractFloat, C <: Complex}(inputData :: Array{R},
-                                                        outputData :: Array{C},
-                                                        L :: Lattice,
-                                                        bracketSums :: Array{R},
-                                                        t
-                                                       )
+function changeBasis!{
+                      R <: AbstractFloat,
+                      R1 <: Union{AbstractFloat,Complex},
+                      R2 <: Union{AbstractFloat,Complex},
+                      I <: Integer,
+                      N,
+                      M
+                     }(
+                       inputData :: Array{R1,N},
+                       outputData :: Array{R2,N},
+                       L :: Lattice,
+                       bracketSums :: Array{R,M},
+                       dims :: Array{I,1};
+                       inputDomain :: String = "Space",
+                       outputDomain :: String = "Space"
+                      )
+  @argcheck (inputDomain == "Space") || (inputDomain == "Fourier")
+  @argcheck (outputDomain == "Space") || (outputDomain == "Fourier")
   @argcheck size(inputData) == L.size
   @argcheck size(outputData) == L.size
   @argcheck size(bracketSums) == L.size
 
-  outputData = FFT!(outputData,inputData,L,t)
-  outputData .*= 1.0/L.m.*bracketSums
-end
+  dataFourier = (inputDomain == "Space") ?
+    FFT(inputData,L,dims) :
+    inputData
 
-function changeBasis!{R <: AbstractFloat, C <: Complex}(inputData :: Array{C},
-                                                        outputData :: Array{R},
-                                                        L :: Lattice,
-                                                        bracketSums :: Array{R},
-                                                        t
-                                                       )
-  @argcheck size(inputData) == L.size
-  @argcheck size(outputData) == L.size
-  @argcheck size(bracketSums) == L.size
+  dataFourier .*= 1.0/L.m.*bracketSums
 
-  inputData .*= 1.0/L.m.*bracketSums
-  IFFT!(outputData,inputData,L,t)
+  outputData = (outputDomain == "Space") ?
+    IFFT!(outputData,dataFourier,L,dims) :
+    dataFourier
 end
