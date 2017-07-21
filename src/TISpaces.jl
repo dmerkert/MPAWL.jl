@@ -71,12 +71,12 @@ function changeBasis!{
   @argcheck size(bracketSums) == L.size
 
   dataFourier = (inputDomain == "Space") ?
-    FFT(inputData,L,dims) :
+    patternfft(inputData,L,dims) :
     inputData
 
   dataFourier .*= 1.0/L.m.*bracketSums
 
   outputData = (outputDomain == "Space") ?
-    IFFT!(outputData,dataFourier,L,dims) :
+    patternifft(dataFourier,L,dims) :
     dataFourier
 end

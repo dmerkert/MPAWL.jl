@@ -6,7 +6,7 @@ using Base.fft
 
 include("Lattice.jl")
 include("LatticeFunctions.jl")
-include("FFT.jl")
+include("patternfft.jl")
 include("frequencySampling.jl")
 include("TISpaces.jl")
 include("dlVP.jl")
