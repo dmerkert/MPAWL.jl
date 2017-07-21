@@ -8,14 +8,14 @@ using Base.Test
   A = rand((64,64,3))
   AFrequency = patternfft(A,MDu,[1;2])
   @test real(AFrequency[1,1,:])[:] ≈ sum(A,(1,2))[:]
-  setFourierCoefficient!(AFrequency,MDu,[1.0;2.0;3.0],[0.0,0.0],[1;2])
+  setFourierCoefficient!(AFrequency,MDu,[1.0;2.0;3.0],[1;1],[1;2])
   A = patternifft(AFrequency,MDu,[1;2])
   @test sum(A,(1,2))[:] ≈ [1.0;2.0;3.0]
 
   A = rand((64^2,2))
   AFrequency = patternfft(A,MRs,[1])
   @test real(AFrequency[1,:])[:] ≈ sum(A,(1))[:]
-  setFourierCoefficient!(AFrequency,MRs,[3.1;4.1],[0.0],[1])
+  setFourierCoefficient!(AFrequency,MRs,[3.1;4.1],[1],[1])
   A = patternifft(AFrequency,MRs,[1])
   @test sum(A,(1))[:] ≈ [3.1;4.1]
 
@@ -27,7 +27,7 @@ using Base.Test
   A = rand(Complex128,(64,64,3))
   AFrequency = patternfft(A,MDu,[1;2])
   @test AFrequency[1,1,:][:] ≈ sum(A,(1,2))[:]
-  setFourierCoefficient!(AFrequency,MDu,[1.0;2.0;3.0],[0.0,0.0],[1;2])
-  A = IFFT(AFrequency,MDu,[1;2])
+  setFourierCoefficient!(AFrequency,MDu,[1.0;2.0;3.0],[1;1],[1;2])
+  A = patternifft(AFrequency,MDu,[1;2])
   @test sum(A,(1,2))[:] ≈ [1.0;2.0;3.0]
 end
