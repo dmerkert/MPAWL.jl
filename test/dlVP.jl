@@ -1,6 +1,5 @@
 using MPAWL
 using Base.Test
-using BenchmarkTools
 
 function printArr2D(A :: Array{Float64,2})
   println("")
