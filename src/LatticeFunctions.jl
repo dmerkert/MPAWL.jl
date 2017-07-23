@@ -5,6 +5,7 @@ getSamplingIterator,
 getFrequencyIterator,
 getSamplingPoint,
 getFrequencyPoint,
+getFrequencyPoint!,
 getUnitCell,
 getMaxDualLatticeIndex
 
@@ -24,18 +25,58 @@ function modM!{R <: AbstractFloat, I <: Integer}(
   @argcheck target == "unit" || target == "symmetric"
 
   if target == "unit"
-    k = M * mod.(M\k,1.0);
+    k[:] = M * mod.(M\k,1.0);
   else
-    k = M * (mod.(M\k+0.5,1.0)-0.5);
+    k[:] = M * (mod.(M\k+0.5,1.0)-0.5);
   end
   k
 end
 
-modM!{I <: Integer}(
-               k :: Array{I,1},
-               M,
-               target
-              ) = round.(I,modM!(convert(Array{Float64,1},k),M,target))
+function modM!{I <: Integer, MF}(
+                             k :: Array{I,1},
+                             M :: MF,
+                             target
+                            )
+
+  #= @argcheck length(k) == getd(M) =1# =#
+  @argcheck target == "unit" || target == "symmetric"
+
+  if target == "unit"
+    k[:] = round.(I,M * mod.(M\k,1.0))
+  else
+    k[:] = round.(I,M * (mod.(M\k+0.5,1.0)-0.5))
+  end
+  k
+end
+
+function modM!{I <: Integer, R, MF}(
+                             k :: Array{I,1},
+                             tmp :: Array{R,1},
+                             M :: MF,
+                             target
+                            )
+
+  #= @argcheck length(k) == getd(M) =1# =#
+  @argcheck target == "unit" || target == "symmetric"
+
+  tmp .= k
+  A_ldiv_B!(M,tmp)
+  if target == "unit"
+    tmp .= mod.(tmp,1.0)
+    A_mul_B!(tmp,M,tmp)
+    k .= round.(I,tmp)
+
+    #= k[:] = round.(I,M * mod.(M\k,1.0)) =#
+  else
+    tmp .+= 0.5
+    tmp .= mod.(tmp,1.0)
+    tmp .-= 0.5
+    A_mul_B!(tmp,M,tmp)
+    k .= round.(I,tmp)
+    #= k[:] = round.(I,M * (mod.(M\k+0.5,1.0)-0.5)) =#
+  end
+  k
+end
 
 """
     h = _modM(k,M; target="unit")
@@ -117,10 +158,22 @@ end
 
 function getFrequencyPoint(
                           L :: Lattice,
-                          coord :: CartesianIndex
-                         )
+                          coord :: CartesianIndex{N}
+                         ) where {N}
   @argcheck length(coord.I) == L.rank
   modM(L.frequencyLatticeBasis*(collect(coord.I)-1),L.M',L.target)
+end
+
+function getFrequencyPoint!(
+                          L :: Lattice,
+                          coord :: CartesianIndex{N},
+                          point :: Array{I,1},
+                          tmp :: Array{R,1}
+                         ) where {N,I,R}
+  @argcheck length(coord.I) == L.rank
+
+  A_mul_B!(point,L.frequencyLatticeBasis,[coord.I...]-1)
+  modM!(point,tmp,L.MTFactorize,L.target) :: Array{I,1}
 end
 
 function getUnitCell(L :: Lattice)

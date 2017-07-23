@@ -9,8 +9,10 @@ anisotropic pattern on the torus. Has field `M` containing the matrix.
 
 
 """
-immutable Lattice{I <: Integer}
+immutable Lattice{I <: Integer, MF, MF2}
   M :: Array{I,2}
+  MFactorize :: MF
+  MTFactorize :: MF2
   target :: String
   d :: I
   m :: I
@@ -25,6 +27,9 @@ immutable Lattice{I <: Integer}
     @argcheck size(M,1) == size(M,2)
     @argcheck det(M) != 0
     @argcheck target == "unit" || target == "symmetric"
+
+    _MF = factorize(M)
+    _MFT = factorize(M')
 
     d = getd(M)
     m = getm(M)
@@ -52,8 +57,10 @@ immutable Lattice{I <: Integer}
       end
     end
 
-    new(
+    new{I,typeof(_MF),typeof(_MFT)}(
         M,
+        _MF,
+        _MFT,
         target,
         d,
         m,
