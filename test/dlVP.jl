@@ -1,32 +1,6 @@
 using MPAWL
 using Base.Test
 
-function printArr2D(A :: Array{Float64,2})
-  println("")
-  for i in 1:size(A,1)
-    for j in 1:size(A,2)
-      if A[i,j] == 0.0
-        @printf "    "
-      else
-        @printf "%1.2f  " A[i,j]
-      end
-    end
-    println("")
-  end
-  println("")
-end
-
-function printArr2D(A :: Array{Int,2})
-  println("")
-  for i in 1:size(A,1)
-    for j in 1:size(A,2)
-      @printf "%2d  " A[i,j]
-    end
-    println("")
-  end
-  println("")
-end
-
 @testset "pyramidFunction" begin
   alpha = [0.25;0.4]
 
@@ -93,15 +67,45 @@ end
 @test ckphimO ≈ real(fftshift(ckphiO))
 @test norm(ckBSqO[:] - 1.0) ≈ 0.0 atol=1e-15
 
-#=   L = Lattice([4 0;0 8]) =#
-#=   g = [0.25;0.4] =#
 
-  
+N = size(ckphi)
+LUnit = Lattice(L.M,target="unit") :: Lattice{Int}
+for coord in getFrequencyIterator(N)
+  frequency = getFrequency(N,coord)
+  h = frequencyLatticeBasisDecomp(frequency,LUnit)
+  phiOrig = ckphi[coord]
+  phiOrigO = ckphiO[coord]
+  bSqOrig = ckBSq[(h+1)...]
+  bSqOrigO = ckBSqO[(h+1)...]
 
-#=   (ckphi,ckBSq) = delaValleePoussinMean(L,g,orthonormalize=false) =#
-#=   (ckphiO,ckBSq) = delaValleePoussinMean(L,g,orthonormalize=true) =#
+  (phi,BSq) = delaValleePoussinMean(
+                                    frequency,
+                                    L,
+                                    g,
+                                    false
+                                   )
+  (phiO,BSqO) = delaValleePoussinMean(
+                                      frequency,
+                                    L,
+                                    g,
+                                    true
+                                   )
 
-#=   #printArr2D(ckBSq) =#
-#=   printArr2D(fftshift(ckphi)) =#
-#=   printArr2D(fftshift(ckphiO)) =#
+  @test phi ≈ phiOrig
+  @test phiO ≈ phiOrigO
+  @test BSq ≈ bSqOrig
+  @test BSqO ≈ bSqOrigO
+end
+
+#= frequency = CartesianIndex((1,0)) =#
+#= for i in BracketSumIterator( =#
+#=                             frequency, =#
+#=                             CartesianRange( =#
+#=                                            CartesianIndex(ntuple(i -> -1,2)), =#
+#=                                            CartesianIndex(ntuple(i -> 1,2)) =#
+#=                                           ), =#
+#=                             L =#
+#=                            ) =#
+#=   @test frequencyLatticeBasisDecomp([frequency.I...],LUnit) == [frequency.I...] =#
+#= end =#
 end

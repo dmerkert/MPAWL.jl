@@ -119,3 +119,48 @@ function delaValleePoussinMean(L :: Lattice,
 
   (ckphi,ckBSq)
 end
+
+############## NEW ####################
+function delaValleePoussinMean(frequency :: Array{I,1},
+                               L :: Lattice{I},
+                               g :: Array{R,1},
+                               orthonormalize :: Bool = true
+                              ):: Tuple{R,R} where {
+                                       I <: Integer,
+                                       R <: AbstractFloat
+                                      }
+  N = length(frequency)
+
+  ckφ = pyramidFunction(g,L.MTFactorize\frequency)
+
+  bSq = zero(R)
+  for i in BracketSumIterator(
+                              frequency,
+                              CartesianRange(
+                                             CartesianIndex(ntuple(i -> -2,N)),
+                                             CartesianIndex(ntuple(i -> 2,N))
+                                            ),
+                              L
+                             )
+    bSq += abs2(
+                pyramidFunction(g,L.MTFactorize\i)
+               )
+  end
+  if orthonormalize
+    return (ckφ/sqrt(bSq),1.0)
+  else
+    return (ckφ,bSq)
+  end
+end
+
+delaValleePoussinMean(
+                      coord :: CartesianIndex{N},
+                      L :: Lattice{I},
+                      g :: Array{R,1},
+                      orthonormalize :: Bool = true
+                     ) where {
+                              N,
+                              I <: Integer,
+                              R <: AbstractFloat
+                             } = 
+delaValleePoussinMean(getFrequency(N,coord),L,g,orthonormalize)
