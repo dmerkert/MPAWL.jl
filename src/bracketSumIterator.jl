@@ -14,6 +14,34 @@ type BracketSumIterator{N, I, MF, MF2}
   L :: Lattice{I,MF,MF2}
 end
 
+BracketSumIterator(
+                   h :: Array{I,1},
+                   supportLower :: Array{I,1},
+                   supportUpper :: Array{I,1},
+                   L :: Lattice{I,MF,MF2}
+                  ) where {I,MF,MF2} =
+BracketSumIterator(
+                   h,
+                   CartesianRange(
+                                  CartesianIndex(Tuple(supportLower)),
+                                  CartesianIndex(Tuple(supportUpper))
+                                 ),
+                   L
+                  )
+
+BracketSumIterator(
+                   h :: Array{I,1},
+                   supportLower :: I,
+                   supportUpper :: I,
+                   L :: Lattice{I,MF,MF2}
+                  ) where {I,MF,MF2} =
+BracketSumIterator(h,
+                   supportLower*ones(I,L.d),
+                   supportUpper*ones(I,L.d),
+                   L
+                  )
+
+
 type BracketSumIteratorState{N}
   cartesianState :: CartesianIndex{N}
 end

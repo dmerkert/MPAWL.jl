@@ -1,5 +1,6 @@
 export pyramidFunction,
-       delaValleePoussinMean
+       delaValleePoussinMean,
+       delaValleePoussinMeanBracketSum
 """
     pyramidFunction(alpha,x)
 
@@ -64,38 +65,6 @@ pyramidFunction(alpha::Float64,
                 x::Array{Float64,1}
                ) = pyramidFunction(alpha*ones(x),x)
 
-
-
-
-
-"""
-    (ckphi, BSums) = delaValleePoussinMean(g,M)
-Generate the de la Vall�e Poussin mean based on the function g with
-respect to the translates of pattern(M), where g has to be a partition of
-unity in the d-dimensional space, nonnegative everywhere and positive on
-the unit cube. For simplicity g may also be a number or vector, which
-reduces to using the pyramidFunction
-
-INPUT
-   g : a function or vector characterizing the de la Vall�e Poussin mean
-   M : matrix for the translates of the de la Vall�e Poussin means
-
-OUTPUT
-  ckphi : Fourier coefficients of the de la Vall�e Poussin means, where
-  all dimensions have odd number of entries, and c_0 is at the center
-  BSums : Corresponding Bracket sums
-
-OPTIONAL PARAMETERS
-  'Validate' : (true) whether or not to validate the input
-  'File'     : (string) or ({string,string}) whether or not to load (or
-               if not possible ty try to save) the coefficients. If a
-               second file is given, the same holds for the bracket sums.
- 'Orthonormalize': (true) whether or not to orthonormalize the translates
- 'Support'       : cube indicating the support, if g is a function. for
-                   the vector case, the support is determined
-                   automatically. If it is not given for g, the area
-                   2*M*unit cube is taken.
-"""
 function delaValleePoussinMean(L :: Lattice,
                                g :: Array{Float64,1};
                                orthonormalize :: Bool = true
@@ -120,37 +89,29 @@ function delaValleePoussinMean(L :: Lattice,
   (ckphi,ckBSq)
 end
 
-############## NEW ####################
-function delaValleePoussinMean(frequency :: Array{I,1},
+function delaValleePoussinMean(
+                               frequency :: Array{I,1},
                                L :: Lattice{I},
                                g :: Array{R,1},
                                orthonormalize :: Bool = true
-                              ):: Tuple{R,R} where {
+                              ) :: R where {
                                        I <: Integer,
                                        R <: AbstractFloat
                                       }
-  N = length(frequency)
-
   ckφ = pyramidFunction(g,L.MTFactorize\frequency)
 
-  bSq = zero(R)
-  for i in BracketSumIterator(
-                              frequency,
-                              CartesianRange(
-                                             CartesianIndex(ntuple(i -> -2,N)),
-                                             CartesianIndex(ntuple(i -> 2,N))
-                                            ),
-                              L
-                             )
-    bSq += abs2(
-                pyramidFunction(g,L.MTFactorize\i)
+  if orthonormalize
+    ckφ /= sqrt(
+                delaValleePoussinMeanBracketSum(
+                                                frequency,
+                                                L,
+                                                g,
+                                                false
+                                               )
+
                )
   end
-  if orthonormalize
-    return (ckφ/sqrt(bSq),1.0)
-  else
-    return (ckφ,bSq)
-  end
+  ckφ
 end
 
 delaValleePoussinMean(
@@ -164,3 +125,23 @@ delaValleePoussinMean(
                               R <: AbstractFloat
                              } = 
 delaValleePoussinMean(getFrequency(N,coord),L,g,orthonormalize)
+
+function delaValleePoussinMeanBracketSum(
+                               frequency :: Array{I,1},
+                               L :: Lattice{I},
+                               g :: Array{R,1},
+                               orthonormalize :: Bool = true
+                              ) :: R where {
+                                       I <: Integer,
+                                       R <: AbstractFloat
+                                      }
+  if orthonormalize
+    return 1.0
+  else
+    bSq = 0.0
+    for i in BracketSumIterator(frequency, -2, 2, L)
+      bSq += abs2(pyramidFunction(g,L.MTFactorize\i))
+    end
+    bSq
+  end
+end

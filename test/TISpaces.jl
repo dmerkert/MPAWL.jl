@@ -6,22 +6,25 @@ using Base.Test
   data = rand(Complex128,(64,128))
   ckPhi = rand(Complex128,(64,128))
 
-  bSq = bracketSums(L,data)
-
-  data2 = copy(data)
-  coeffsSpace2Fourier!(data2,L,bSq,ckPhi)
-
   dataC = rand(Complex128,128)
   dataR = rand(Float64,128)
 
-  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Space")
-  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Fourier")
-  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Fourier",outputDomain="Space")
-  changeBasis!(dataC,dataC,L,bSq,[1],inputDomain="Fourier",outputDomain="Fourier")
+  #= bSq = bracketSums(L,data) =#
 
-  changeBasis!(dataR,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Space")
-  changeBasis!(dataC,dataR,L,bSq,[1],inputDomain="Space",outputDomain="Space")
+  #= data2 = copy(data) =#
+  #= coeffsSpace2Fourier!(data2,L,bSq,ckPhi) =#
 
-  changeBasis!(dataR,dataC,L,bSq,[1],inputDomain="Space",outputDomain="Fourier")
-  changeBasis!(dataC,dataR,L,bSq,[1],inputDomain="Fourier",outputDomain="Space")
+  g = [0.25;0.4]
+  bracketSum = h -> delaValleePoussinMeanBracketSum(h,L,g,false)
+
+  changeBasis!(dataC,dataC,L,bracketSum,[1],inputDomain="Space",outputDomain="Space")
+  changeBasis!(dataC,dataC,L,bracketSum,[1],inputDomain="Space",outputDomain="Fourier")
+  changeBasis!(dataC,dataC,L,bracketSum,[1],inputDomain="Fourier",outputDomain="Space")
+  changeBasis!(dataC,dataC,L,bracketSum,[1],inputDomain="Fourier",outputDomain="Fourier")
+
+  changeBasis!(dataR,dataC,L,bracketSum,[1],inputDomain="Space",outputDomain="Space")
+  changeBasis!(dataC,dataR,L,bracketSum,[1],inputDomain="Space",outputDomain="Space")
+
+  changeBasis!(dataR,dataC,L,bracketSum,[1],inputDomain="Space",outputDomain="Fourier")
+  changeBasis!(dataC,dataR,L,bracketSum,[1],inputDomain="Fourier",outputDomain="Space")
 end
