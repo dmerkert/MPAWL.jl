@@ -101,15 +101,15 @@ function delaValleePoussinMean(
   ckφ = pyramidFunction(g,L.MTFactorize\frequency)
 
   if orthonormalize
-    ckφ /= sqrt(
-                delaValleePoussinMeanBracketSum(
-                                                frequency,
-                                                L,
-                                                g,
-                                                false
-                                               )
-
-               )
+    bs = delaValleePoussinMeanBracketSum(
+                                         frequency,
+                                         L,
+                                         g,
+                                         false
+                                        )
+    if bs > 0.0
+      ckφ /= sqrt(bs)
+    end
   end
   ckφ
 end

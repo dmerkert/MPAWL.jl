@@ -7,7 +7,8 @@ getSamplingPoint,
 getFrequencyPoint,
 getFrequencyPoint!,
 getUnitCell,
-getMaxDualLatticeIndex
+getMaxDualLatticeIndex,
+isSublattice
 
 """
     _modM!(k,M; target="unit")
@@ -121,9 +122,9 @@ M, i.e. k = modM(V.v,M), where V = frequencyLatticeBasis(M)
 The `target` specifies the set of congruence class representants, i.e. either
 "unit" for [0,1)^d or "symmetric" for [-0.5,0.5)^d.
 """
-function frequencyLatticeBasisDecomp{I <: Integer}(
+function frequencyLatticeBasisDecomp{I <: Integer,LI,MF,MF2}(
                                                 k :: Array{I,1},
-                                                L :: Lattice
+                                                L :: Lattice{LI,MF,MF2}
                                                )
   @argcheck length(k) == L.d
 
@@ -157,9 +158,9 @@ function getSamplingPoint(
 end
 
 function getFrequencyPoint(
-                          L :: Lattice,
+                           L :: Lattice{I,MF,MF2},
                           coord :: CartesianIndex{N}
-                         ) where {N}
+                         ) where {N,I,MF,MF2}
   @argcheck length(coord.I) == L.rank
   modM(L.frequencyLatticeBasis*(collect(coord.I)-1),L.M',L.target)
 end
@@ -219,4 +220,11 @@ end
 getMaxDualLatticeIndex(L :: Lattice;
                        cubeSize :: Float64 = 1.0
                       ) = getMaxDualLatticeIndex(L,cubeSize*ones(L.d))
+
+
+function isSublattice(LSuper :: Lattice, LSub :: Lattice)
+  MN = LSuper.M * inv(LSub.M)
+
+  norm(round.(MN)-MN) < 1e-12
+end
 

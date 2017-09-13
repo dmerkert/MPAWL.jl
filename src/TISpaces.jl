@@ -3,24 +3,26 @@ export bracketSums,
        changeBasis!
 
 
-#= function coeffsSpace2Fourier!{R <: AbstractFloat, =#
-#=                               C <: Complex}(data :: Array{C}, =#
-#=                                             L :: Lattice, =#
-#=                                             hata :: Array{R}, =#
-#=                                             ckPhi :: Array{C} =#
-#=                                            ) =#
-#=   @argcheck size(hata) == L.size =#
-#=   @argcheck size(ckPhi) == size(data) =#
+function coeffsSpace2Fourier!{R <: Union{AbstractFloat,Complex},
+                              C <: Complex
+                             }(
+                               data :: Array{C},
+                               L :: Lattice,
+                               hata :: Array{R},
+                               ckPhi :: Array{C}
+                              )
+  @argcheck size(hata) == L.size
+  @argcheck size(ckPhi) == size(data)
 
-#=   N = size(data) =#
-#=   LUnit = Lattice(L.M,target="unit") =#
-#=   for coord in getFrequencyIterator(N) =#
-#=     frequency = getFrequency(N,coord) =#
-#=     h = frequencyLatticeBasisDecomp(frequency,LUnit) =#
-#=     data[coord] = hata[(h+1)...] * ckPhi[coord] =#
-#=   end =#
-#=   data =#
-#= end =#
+  N = size(data)
+  LUnit = Lattice(L.M,target="unit")
+  for coord in getFrequencyIterator(N)
+    frequency = getFrequency(N,coord)
+    h = frequencyLatticeBasisDecomp(frequency,LUnit)
+    data[coord] = hata[(h+1)...] * ckPhi[coord]
+  end
+  data
+end
 
 #= function changeBasis!{ =#
 #=                       R <: AbstractFloat, =#
