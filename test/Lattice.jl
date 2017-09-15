@@ -1,5 +1,6 @@
 using MPAWL
 using Base.Test
+using ProgressMeter
 
 @testset "Lattice" begin
   MDu = Lattice([64,64],target="unit")
@@ -62,4 +63,68 @@ using Base.Test
   [1.0/64^2]
   @test mod.(MRs.samplingLatticeBasis.'*MRs.frequencyLatticeBasis,1.0) ≈
   [1.0/64^2]
+end
+
+function getMatrix(
+                   k1,k2,k3, a
+                  )
+
+  b = 32
+
+  if a == 0
+    return [b k1 k2;
+            0 b k3;
+            0 0 b]
+  elseif a == 1
+    return [b 0 k2;
+            k1 b k3;
+            0 0 b]
+  elseif a == 2
+    return [b k1 0;
+            0 b k3;
+            k2 0 b]
+  elseif a == 3
+    return [b k1 k2;
+            0 b 0;
+            0 k3 b]
+  elseif a == 4
+    return [b 0 0;
+            k1 b k3;
+            k2 0 b]
+  elseif a == 5
+    return [b 0 k2;
+            k1 b 0;
+            0 k3 b]
+  elseif a == 6
+    return [b k1 0;
+            0 b 0;
+            k2 k3 b]
+  elseif a == 7
+    return [b 0 0;
+            k1 b 0;
+            k2 k3 b]
+  end
+end
+
+@testset "Lattice generation" begin
+  aRange = 0:7
+  k1Range = -32:1:32
+
+  simulations = length(aRange)*length(k1Range)^3
+  prog = Progress(simulations,dt=1.0, barglyphs=BarGlyphs("[=> ]"), barlen=50)
+
+
+  for a in aRange
+    for k1 in k1Range
+      for k2 in k1Range
+        for k3 in k1Range
+          M = getMatrix(k1,k2,k3,a)
+          next!(prog)
+          if !(det(M) ≈ 0)
+            L = Lattice(M)
+          end
+        end
+      end
+    end
+  end
 end
