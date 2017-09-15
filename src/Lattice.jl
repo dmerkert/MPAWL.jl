@@ -45,17 +45,29 @@ immutable Lattice{I <: Integer, MF, MF2}
     @assert _patternRank <= d
 
 
-    S = diag(_SNF[2])
-    #@show M
-    for i in 1:size(_patternBasis,2)
-      for j in 1:size(_patternBasis,2)
-        y = _patternBasis[:,i]
-        h = _generatingSetBasis[:,j]
+    #= S = diag(_SNF[2]) =#
+    #=  for i in 1:size(_patternBasis,2) =#
+    #=    for j in 1:size(_patternBasis,2) =#
+    #=      y = _patternBasis[:,i] =#
+    #=      h = _generatingSetBasis[:,j] =#
 
-        i == j && @assert mod(dot(y,h),1.0) ≈ 1.0/S[d-_patternRank+i]
-        i != j && @assert ((mod(dot(y,h),1.0) ≈ 0.0) || (mod(dot(y,h),1.0) ≈ 1.0))
-      end
-    end
+    #=      i == j && @assert abs( =#
+    #=                            mod(dot(y,h),1.0) - 1.0/S[d-_patternRank+i] =#
+    #=                           )/abs(1.0/S[d-_patternRank+i]) < 1e-10 =#
+    #=      i != j && @assert ( =#
+    #=                         ( =#
+    #=                          abs( =#
+    #=                              mod(dot(y,h),1.0) =#
+    #=                             ) < 1e-12 =#
+    #=                         ) || =#
+    #=                         ( =#
+    #=                          abs( =#
+    #=                              mod(dot(y,h),1.0) - 1.0 =#
+    #=                             ) < 1e-12 =#
+    #=                         ) =#
+    #=                        ) =#
+    #=    end =#
+    #=  end =#
 
     new{I,typeof(_MF),typeof(_MFT)}(
         M,
@@ -89,7 +101,7 @@ Lattice{I}(diagm(v),target=target)
     m = getm(M): calculates the number of pattern points given by m = abs(det(M))
 """
 function getm{I <: Integer}(M :: Array{I,2})
-  convert(I,abs(det(M)))
+  round(I,abs(det(M)))
 end
 
 """
@@ -202,7 +214,7 @@ function patternNormalForm{I <: Integer}(M :: Array{I,2})
       if pMf[row, col] != 0
         # Modify by row addition, such that col,col is nonnegative
         if pMf[col,col] < 0
-          pMf[col,:] = pMf[col,:] - fix(pMf[col,col]/pMf[row,col])*pMf[row,:]
+          pMf[col,:] = pMf[col,:] - trunc(pMf[col,col]/pMf[row,col])*pMf[row,:]
         end
         # get it positive
         if pMf[col,col] == 0
@@ -241,8 +253,10 @@ function patternNormalForm{I <: Integer}(M :: Array{I,2})
     for col in 2:d
       for row=(col-1):-1:1
         f=0
-        if (pMf[row,col]<0) || (pMf[row,col]>=pMf[col,col])
-          f = -floor(pMf[row,col]/pMf[col,col])
+        if pMf[col,col] != 0
+          if (pMf[row,col]<0) || (pMf[row,col]>=pMf[col,col])
+            f = -floor(pMf[row,col]/pMf[col,col])
+          end
         end
         pMf[row,:] = pMf[row,:] + f*pMf[col,:]
       end
