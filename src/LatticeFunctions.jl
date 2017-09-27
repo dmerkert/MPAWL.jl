@@ -8,7 +8,9 @@ getFrequencyPoint,
 getFrequencyPoint!,
 getUnitCell,
 getMaxDualLatticeIndex,
-isSublattice
+isSublattice,
+isLatticeDecomposition,
+getPatternBasisDecomp
 
 """
     _modM!(k,M; target="unit")
@@ -56,27 +58,28 @@ function modM!{I <: Integer, R, MF}(
                              M :: MF,
                              target
                             )
+  modM!(k,M,target)
 
   #= @argcheck length(k) == getd(M) =1# =#
-  @argcheck target == "unit" || target == "symmetric"
+  #= @argcheck target == "unit" || target == "symmetric" =#
 
-  tmp .= k
-  A_ldiv_B!(M,tmp)
-  if target == "unit"
-    tmp .= mod.(tmp,1.0)
-    A_mul_B!(tmp,M,tmp)
-    k .= round.(I,tmp)
+  #= tmp .= k =#
+  #= A_ldiv_B!(M,tmp) =#
+  #= if target == "unit" =#
+  #=   tmp .= mod.(tmp,1.0) =#
+  #=   A_mul_B!(tmp,M,tmp) =#
+  #=   k .= round.(I,tmp) =#
 
-    #= k[:] = round.(I,M * mod.(M\k,1.0)) =#
-  else
-    tmp .+= 0.5
-    tmp .= mod.(tmp,1.0)
-    tmp .-= 0.5
-    A_mul_B!(tmp,M,tmp)
-    k .= round.(I,tmp)
-    #= k[:] = round.(I,M * (mod.(M\k+0.5,1.0)-0.5)) =#
-  end
-  k
+  #=   #1= k[:] = round.(I,M * mod.(M\k,1.0)) =1# =#
+  #= else =#
+  #=   tmp .+= 0.5 =#
+  #=   tmp .= mod.(tmp,1.0) =#
+  #=   tmp .-= 0.5 =#
+  #=   A_mul_B!(tmp,M,tmp) =#
+  #=   k .= round.(I,tmp) =#
+  #=   #1= k[:] = round.(I,M * (mod.(M\k+0.5,1.0)-0.5)) =1# =#
+  #= end =#
+  #= k =#
 end
 
 """
@@ -174,7 +177,8 @@ function getFrequencyPoint!(
   @argcheck length(coord.I) == L.rank
 
   A_mul_B!(point,L.frequencyLatticeBasis,[coord.I...]-1)
-  modM!(point,tmp,L.MTFactorize,L.target) :: Array{I,1}
+  #= modM!(point,tmp,L.MTFactorize,L.target) :: Array{I,1} =#
+  modM!(point,L.M',L.target) :: Array{I,1}
 end
 
 function getUnitCell(L :: Lattice)
@@ -222,9 +226,45 @@ getMaxDualLatticeIndex(L :: Lattice;
                       ) = getMaxDualLatticeIndex(L,cubeSize*ones(L.d))
 
 
-function isSublattice(LSuper :: Lattice, LSub :: Lattice)
-  MN = LSuper.M * inv(LSub.M)
+"""
+    isSublattice(LSuper,LSub)
 
-  norm(round.(MN)-MN) < 1e-12
+returns true if LSub is a sublattice of LSuper, i.e. if there is a regular
+integer matrix J such that LSuper.M = J*LSub.M
+"""
+function isSublattice(
+                      LSuper :: Lattice{I,MF11,MF12},
+                      LSub :: Lattice{I,MF21,MF22}
+                     ) where {
+                              I <: Integer,
+                              MF11,MF12,
+                              MF21,MF22
+                             }
+
+  J = round.(I,LSuper.M * inv(LSub.M))
+
+  LSuper.M == J*LSub.M
+end
+
+function isLatticeDecomposition(
+                      LSuper :: Lattice{I,MF11,MF12},
+                      J :: Lattice{I,MF21,MF22},
+                      LSub :: Lattice{I,MF31,MF32}
+                     ) where {
+                              I <: Integer,
+                              MF11,MF12,
+                              MF21,MF22,
+                              MF31,MF32
+                             }
+
+  LSuper.M == J.M * LSub.M
+end
+
+function getPatternBasisDecomp(
+                               L :: Lattice{I,MF11,MF12},
+                               point :: Array{R,1}
+                              ) where {I,MF11,MF12, R <: Real}
+
+  modM(round.(I,L.SNF[3]\(L.SNF[2]*point/(2.0pi))),L.M,"unit")
 end
 

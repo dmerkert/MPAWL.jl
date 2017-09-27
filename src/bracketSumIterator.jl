@@ -64,7 +64,7 @@ function Base.next(
   (z,cartesianState) = next(iter.support,state.cartesianState)
   state.cartesianState = cartesianState
 
-  (iter.h + iter.L.MTFactorize*[z.I...], state)
+  (iter.h + iter.L.M'*[z.I...], state)
 end
 
 Base.iteratorsize(iter :: BracketSumIterator{N,I,MF,MF2}) where {N,I,MF,MF2} =
