@@ -139,7 +139,7 @@ function delaValleePoussinMeanBracketSum(
     return 1.0
   else
     bSq = 0.0
-    for i in BracketSumIterator(frequency, -2, 2, L)
+    for i in BracketSumIterator(frequency, -1, 1, L)
       bSq += abs2(pyramidFunction(g,L.MTFactorize\i))
     end
     bSq

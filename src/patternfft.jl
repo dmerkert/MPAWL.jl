@@ -71,7 +71,7 @@ function patternifft!{
              }(
                dhat :: Array{R,N},
                L :: Lattice,
-               dims :: Array{I,1} = collect(1:ndims(a))
+               dims :: Array{I,1} = collect(1:ndims(dhat))
               )
   @argcheck size(dhat)[dims] == L.size
   ifft!(dhat,dims)
