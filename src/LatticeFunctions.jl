@@ -10,7 +10,9 @@ getUnitCell,
 getMaxDualLatticeIndex,
 isSublattice,
 isLatticeDecomposition,
-getPatternBasisDecomp
+getPatternBasisDecomp,
+getSuperpatternPoint,
+getSuperpatternIndex
 
 """
     _modM!(k,M; target="unit")
@@ -24,8 +26,8 @@ function modM!{R <: AbstractFloat, I <: Integer}(
                target
               )
 
-  @argcheck length(k) == getd(M)
-  @argcheck target == "unit" || target == "symmetric"
+  #= @argcheck length(k) == getd(M) =#
+  #= @argcheck target == "unit" || target == "symmetric" =#
 
   if target == "unit"
     k[:] = M * mod.(M\k,1.0);
@@ -42,7 +44,7 @@ function modM!{I <: Integer, MF}(
                             )
 
   #= @argcheck length(k) == getd(M) =1# =#
-  @argcheck target == "unit" || target == "symmetric"
+  #= @argcheck target == "unit" || target == "symmetric" =#
 
   if target == "unit"
     k[:] = round.(I,M * mod.(M\k,1.0))
@@ -150,14 +152,21 @@ function getFrequencyIterator(L :: Lattice)
 end
 
 function getSamplingPoint(
-                          L :: Lattice,
-                          coord :: CartesianIndex
-                         )
+                          L :: Lattice{I,MF1,MF2},
+                          coord :: CartesianIndex{N}
+                         ) where {
+                                  I,
+                                  MF1,
+                                  MF2,
+                                  N
+                                 }
   @argcheck length(coord.I) == L.rank
-  2.0*pi*modM(L.samplingLatticeBasis*(collect(coord.I)-1),
+  (
+   2.0*pi*modM(L.samplingLatticeBasis*(collect(coord.I)-1),
               eye(Int64,L.d),
               L.target
              )
+  ) :: Array{Float64,1}
 end
 
 function getFrequencyPoint(
@@ -265,6 +274,85 @@ function getPatternBasisDecomp(
                                point :: Array{R,1}
                               ) where {I,MF11,MF12, R <: Real}
 
-  modM(round.(I,L.SNF[3]\(L.SNF[2]*point/(2.0pi))),L.M,"unit")
+  @show coordTmp = round.(
+                      I,
+                      L.SNF[3]\
+                      (L.SNF[2]*point/(2.0pi))
+                     )
+  @show coord = modM(
+               coordTmp,
+               L.M,
+               "unit"
+              )
+  k = coordTmp
+  @show mod.(L.M\k,1.0)
+  @show L.M * mod.(L.M\k,1.0)
+  @show round.(I,L.M * mod.(L.M\k,1.0))
+  @show L.M
+
+  @assert all(coord .>= 0)
+  @assert all(coord .< L.size)
+
+  coord
 end
 
+function getSuperpatternPoint(
+                              coordDecomposition :: CartesianIndex{N},
+                              pointSub :: Array{Float64,1},
+                              LSub :: Lattice{I,MF11,MF12},
+                              LDecomposition :: Lattice{I,MF31,MF32}
+                             ) where {
+                                      N,
+                                      I,
+                                      MF11,
+                                      MF12,
+                                      MF31,
+                                      MF32
+                                     }
+
+  pointSub + LSub.M\getSamplingPoint(
+                                     LDecomposition,
+                                     coordDecomposition
+                                    )
+end
+
+function getSuperpatternIndex(
+                              coordDecomposition :: CartesianIndex{N},
+                              coordSub :: CartesianIndex{N2},
+                              LSub :: Lattice{I,MF11,MF12},
+                              LSuper :: Lattice{I,MF21,MF22},
+                              LDecomposition :: Lattice{I,MF31,MF32}
+                             ) where {
+                                      I,
+                                      MF11,
+                                      MF12,
+                                      MF21,
+                                      MF22,
+                                      MF31,
+                                      MF32,
+                                      N,N2
+                                     }
+
+  if isdiag(LDecomposition.M)
+    return coordSub + coordDecomposition
+  else
+
+    pointSub = getSamplingPoint(
+                                LSub,
+                                coordSub
+                               )
+    superpatternPoint = getSuperpatternPoint(
+                                             coordDecomposition,
+                                             pointSub,
+                                             LSub,
+                                             LDecomposition
+                                            )
+
+    coordSuper = CartesianIndex(((getPatternBasisDecomp(LSuper,superpatternPoint)+1)...))
+
+    @assert all(coordSuper.I .>= 1)
+    @assert all(coordSuper.I .<= LSuper.size)
+
+    return coordSuper
+  end
+end
